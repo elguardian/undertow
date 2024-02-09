@@ -67,7 +67,6 @@ public class RequestContentEncodingTestCase {
                         exchange.getResponseSender().send(message, IoCallback.END_EXCHANGE);
                     }
                 });
-        final EncodingHandler wrappedEncode = new EncodingHandler(contentEncodingRepository).setNext(encode);
 
         final HttpHandler decode = new RequestEncodingHandler(new HttpHandler() {
             @Override
@@ -75,18 +74,17 @@ public class RequestContentEncodingTestCase {
                 exchange.getRequestReceiver().receiveFullBytes(new Receiver.FullBytesCallback() {
                     @Override
                     public void handle(HttpServerExchange exchange, byte[] message) {
+                        Assert.assertTrue(exchange.getRequestContentLength()>0);
                         exchange.getResponseSender().send(ByteBuffer.wrap(message));
                     }
                 });
             }
         }).addEncoding("deflate", InflatingStreamSourceConduit.WRAPPER)
                 .addEncoding("gzip", GzipStreamSourceConduit.WRAPPER);
-        final HttpHandler wrappedDecode = new RequestEncodingHandler(decode)
-                .addEncoding("deflate", InflatingStreamSourceConduit.WRAPPER)
-                .addEncoding("gzip", GzipStreamSourceConduit.WRAPPER);
+
         PathHandler pathHandler = new PathHandler();
-        pathHandler.addPrefixPath("/encode", wrappedEncode);
-        pathHandler.addPrefixPath("/decode", wrappedDecode);
+        pathHandler.addPrefixPath("/encode", encode);
+        pathHandler.addPrefixPath("/decode", decode);
 
         DefaultServer.setRootHandler(pathHandler);
     }
