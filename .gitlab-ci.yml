@@ -1,0 +1,67 @@
+# This file is a template, and might need editing before it works on your project.
+# This is a sample GitLab CI/CD configuration file that should run without any modifications.
+# It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,
+# it uses echo commands to simulate the pipeline execution.
+#
+# A pipeline is composed of independent jobs that run scripts, grouped into stages.
+# Stages run in sequential order, but jobs within stages run in parallel.
+#
+# For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
+#
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - test
+
+build-job:       # This job runs in the build stage, which runs first.
+  stage: build
+  image: registry.redhat.io/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+  tags:
+    - shared-podman
+    - x86_64
+  script:
+    - echo "Compiling the code..."
+    - mvn -U -B -fae -DskipTests -Dfindbugs clean install
+    - echo "Compile complete."
+
+unit-test-job:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  image: registry.redhat.io/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+  tags:
+    - shared-podman
+    - x86_64
+  script: |
+    echo "Running unit tests..."
+    mvn -U -B -fn test -Pproxy '-DfailIfNoTests=false' | tee test.log
+    echo "Tests finished running"
+    ! grep "There are test failures" test.log
+    if [ $? -eq 1 ]
+        then
+            exit 1
+    fi
+    ! grep "BUILD FAILURE" test.log
+    if [ $? -eq 1 ]
+        then
+            exit 1
+    fi
+    ! grep "Build failures were ignored." test.log
+    exit $?
+
+    #This ^ is required to detect build failre. -fae skip modules that depend on failing module, -fn does not fail at all.
+    #We want full build to report all failures, caveat is that enignieer will have to maual go through log to pinpoint those
+    #Given above we need to manually detect failure. If by any chance job should fail, this needs a tweak.
+    #IMPORTANT: this has to be multilne, seems like gitlab reactor treats each single line as separate bash run 
+  artifacts:
+    reports:
+      junit:
+        - '**/target/surefire-*/TEST-*.xml'
+        # txt excludedd for now as it breaks gitlab test result report
+        #- '**/target/surefire-*/*.txt'
+
