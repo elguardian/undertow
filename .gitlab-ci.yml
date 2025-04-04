@@ -16,7 +16,7 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
-stages:          # List of stages for jobs, and their order of execution
+stages:          # List of stages for jobs, and stages:
   - build
   - test
 
@@ -31,7 +31,7 @@ build-job:       # This job runs in the build stage, which runs first.
     - mvn -U -B -fae -DskipTests -Dfindbugs clean install
     - echo "Compile complete."
 
-unit-test-job:   # This job runs in the test stage.
+.unite-test-job-base: #Base stuff so we dont have to repeat...
   stage: test    # It only starts when the job in the build stage completes successfully.
   image: registry.redhat.io/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
   tags:
@@ -39,7 +39,7 @@ unit-test-job:   # This job runs in the test stage.
     - x86_64
   script: |
     echo "Running unit tests..."
-    mvn -U -B -fn test -Pproxy '-DfailIfNoTests=false' | tee test.log
+    mvn -U -B -fn test -Pproxy '-DfailIfNoTests=false' $TEST_EXTRA_SWITCH | tee test.log
     echo "Tests finished running"
     ! grep "There are test failures" test.log
     if [ $? -eq 1 ]
@@ -64,4 +64,15 @@ unit-test-job:   # This job runs in the test stage.
         - '**/target/surefire-*/TEST-*.xml'
         # txt excludedd for now as it breaks gitlab test result report
         #- '**/target/surefire-*/*.txt'
+  variables:
+    TEST_EXTRA_SWITCH: ""
 
+unit-test-job:
+  extends: .unite-test-job-base
+  variables:
+    TEST_EXTRA_SWITCH: ""
+
+unit-test-ipv6-job:
+  extends: .unite-test-job-base
+  variables:
+    TEST_EXTRA_SWITCH: "-Dtest.ipv6=true"
