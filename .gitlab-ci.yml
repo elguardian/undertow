@@ -29,6 +29,10 @@ build-job:       # This job runs in the build stage, which runs first.
     - echo "Compiling the code..."
     - mvn -U -B -fae -DskipTests -Dfindbugs clean install
     - echo "Compile complete."
+  variables:
+    KUBERNETES_MEMORY_REQUEST: "2Gi"
+    KUBERNETES_MEMORY_LIMIT: "4Gi"
+
 
 .unite-test-job-base: #Base stuff so we dont have to repeat...
   stage: test    # It only starts when the job in the build stage completes successfully.
@@ -64,6 +68,9 @@ build-job:       # This job runs in the build stage, which runs first.
         #- '**/target/surefire-*/*.txt'
   variables:
     TEST_EXTRA_SWITCH: ""
+    KUBERNETES_MEMORY_REQUEST: "2Gi"
+    KUBERNETES_MEMORY_LIMIT: "4Gi"
+
 
 unit-test-job:
   extends: .unite-test-job-base
