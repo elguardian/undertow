@@ -41,7 +41,7 @@ build-job:       # This job runs in the build stage, which runs first.
     - itup-alm-x86
   script: |
     echo "Running unit tests..."
-    mvn -U -B -fn test -Pproxy '-DfailIfNoTests=false' $TEST_EXTRA_SWITCH | tee test.log
+    mvn -U -B -fn install -Pproxy '-DfailIfNoTests=false' $TEST_EXTRA_SWITCH | tee test.log
     echo "Tests finished running"
     ! grep "There are test failures" test.log
     if [ $? -eq 1 ]
