@@ -20,9 +20,9 @@ stages:          # List of stages for jobs, and stages:
   - build
   - test
 
-build-job:       # This job runs in the build stage, which runs first.
+.build-job:       # This job runs in the build stage, which runs first.
   stage: build
-  image: registry.redhat.io/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+  image: $IMAGE
   tags:
     - itup-alm-x86
   script:
@@ -33,10 +33,14 @@ build-job:       # This job runs in the build stage, which runs first.
     KUBERNETES_MEMORY_REQUEST: "2Gi"
     KUBERNETES_MEMORY_LIMIT: "4Gi"
 
+build-job-jdk11:
+  extends: .build-job
+  variables:
+    IMAGE: registry.access.redhat.com/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
 
-.unite-test-job-base: #Base stuff so we dont have to repeat...
+.unit-test-job-base: #Base stuff so we dont have to repeat...
   stage: test    # It only starts when the job in the build stage completes successfully.
-  image: registry.redhat.io/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+  image: $IMAGE
   tags:
     - itup-alm-x86
   script: |
@@ -67,17 +71,30 @@ build-job:       # This job runs in the build stage, which runs first.
         # txt excludedd for now as it breaks gitlab test result report
         #- '**/target/surefire-*/*.txt'
   variables:
+    IMAGE: ""
     TEST_EXTRA_SWITCH: ""
     KUBERNETES_MEMORY_REQUEST: "2Gi"
     KUBERNETES_MEMORY_LIMIT: "4Gi"
 
-
-unit-test-job:
-  extends: .unite-test-job-base
+.unit-test-job:
+  extends: .unit-test-job-base
   variables:
     TEST_EXTRA_SWITCH: ""
+    IMAGE: ""
 
-unit-test-ipv6-job:
-  extends: .unite-test-job-base
+.unit-test-ipv6-job:
+  extends: .unit-test-job-base
   variables:
     TEST_EXTRA_SWITCH: "-Dtest.ipv6=true"
+    IMAGE: ""
+
+unit-test-job-jdk11:
+  extends: .unit-test-job
+  variables:
+    IMAGE: registry.access.redhat.com/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+
+
+unit-test-ipv6-job-jdk11:
+  extends: .unit-test-ipv6-job
+  variables:
+    IMAGE: registry.access.redhat.com/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
