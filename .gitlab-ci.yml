@@ -36,7 +36,7 @@ stages:          # List of stages for jobs, and stages:
 build-job-jdk11:
   extends: .build-job
   variables:
-    IMAGE: registry.access.redhat.com/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+    IMAGE: registry.access.redhat.com/ubi8/openjdk-11@sha256:28b35eea470174a39befd8eb9250a3276b79a4f6e7dac7872d09722fc8fe9cd7
 
 .unit-test-job-base: #Base stuff so we dont have to repeat...
   stage: test    # It only starts when the job in the build stage completes successfully.
@@ -45,7 +45,7 @@ build-job-jdk11:
     - itup-alm-x86
   script: |
     echo "Running unit tests..."
-    mvn -U -B -fn install -Pproxy '-DfailIfNoTests=false' $TEST_EXTRA_SWITCH | tee test.log
+    mvn -U -B -fn test -Pproxy '-DfailIfNoTests=false' $TEST_EXTRA_SWITCH | tee test.log
     echo "Tests finished running"
     ! grep "There are test failures" test.log
     if [ $? -eq 1 ]
@@ -91,10 +91,10 @@ build-job-jdk11:
 unit-test-job-jdk11:
   extends: .unit-test-job
   variables:
-    IMAGE: registry.access.redhat.com/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+    IMAGE: registry.access.redhat.com/ubi8/openjdk-11@sha256:28b35eea470174a39befd8eb9250a3276b79a4f6e7dac7872d09722fc8fe9cd7
 
 
 unit-test-ipv6-job-jdk11:
   extends: .unit-test-ipv6-job
   variables:
-    IMAGE: registry.access.redhat.com/ubi9/openjdk-11@sha256:a7ab70939535b9e37d233aeee6617788db21e8439b98292f20a1c47d4dd876da
+    IMAGE: registry.access.redhat.com/ubi8/openjdk-11@sha256:28b35eea470174a39befd8eb9250a3276b79a4f6e7dac7872d09722fc8fe9cd7
