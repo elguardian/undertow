@@ -80,13 +80,13 @@ build-job-jdk11:
 .unit-test-job:
   extends: .unit-test-job-base
   variables:
-    TEST_EXTRA_SWITCH: ""
+    TEST_EXTRA_SWITCH: "-Dversion.surefire.plugin=2.22.0"
     IMAGE: ""
 
 .unit-test-ipv6-job:
   extends: .unit-test-job-base
   variables:
-    TEST_EXTRA_SWITCH: "-Dtest.ipv6=true"
+    TEST_EXTRA_SWITCH: "-Dtest.ipv6=true -Dversion.surefire.plugin=2.22.0"
     IMAGE: ""
 
 unit-test-job-jdk11:
