@@ -26,8 +26,8 @@ import io.undertow.servlet.spec.HttpServletResponseImpl;
 import io.undertow.servlet.spec.ServletContextImpl;
 import io.undertow.util.BadRequestException;
 import io.undertow.util.ParameterLimitException;
-import java.util.Deque;
-import java.util.Map;
+import io.undertow.util.QueryParameterUtils;
+
 import javax.servlet.ServletException;
 
 import static javax.servlet.AsyncContext.ASYNC_CONTEXT_PATH;
@@ -215,24 +215,6 @@ public final class DispatchUtils {
         return pathMatch;
     }
 
-    private static Map<String, Deque<String>> mergeQueryParameters(final Map<String, Deque<String>> newParams, final Map<String, Deque<String>> oldParams) {
-        for (Map.Entry<String, Deque<String>> entry : oldParams.entrySet()) {
-            Deque<String> values = newParams.get(entry.getKey());
-            if (values == null) {
-                // add all the values as new params do not contain this key
-                newParams.put(entry.getKey(), entry.getValue());
-            } else {
-                // merge values new params first
-                for (String v : entry.getValue()) {
-                    if (!values.contains(v)) {
-                        values.add(v);
-                    }
-                }
-            }
-        }
-        return newParams;
-    }
-
     private static String assignRequestPath(final String path, final HttpServletRequestImpl requestImpl,
             final ServletContextImpl servletContext, final boolean include) throws ParameterLimitException, BadRequestException {
         final StringBuilder sb = new StringBuilder();
@@ -246,19 +228,19 @@ public final class DispatchUtils {
         if (include) {
             // include does not modify exchange paths, just add the query string and request uri
             // the rest of attributes are added via the match later
-            requestImpl.setAttribute(INCLUDE_QUERY_STRING, fake.getQueryString());
+            requestImpl.setAttribute(INCLUDE_QUERY_STRING, fake.getDecodedQueryString());
             requestImpl.setAttribute(INCLUDE_REQUEST_URI, fake.getRequestURI());
         } else {
             exchange.setRelativePath(newRequestPath);
             exchange.setRequestPath(fake.getRequestPath());
             exchange.setRequestURI(fake.getRequestURI());
-            if (!fake.getQueryString().isEmpty()) {
-                exchange.setQueryString(fake.getQueryString());
+            if (!fake.getDecodedQueryString().isEmpty()) {
+                exchange.setDecodedQueryString(fake.getDecodedQueryString());
             }
         }
         // both forward and include merge parameters by spec
-        if (!fake.getQueryString().isEmpty()) {
-            requestImpl.setQueryParameters(mergeQueryParameters(fake.getQueryParameters(), requestImpl.getQueryParameters()));
+        if (!fake.getDecodedQueryString().isEmpty()) {
+            requestImpl.setQueryParameters(QueryParameterUtils.mergeQueryParameters(fake.getQueryParameters(), requestImpl.getQueryParameters()));
         }
         return newRequestPath;
     }

@@ -44,16 +44,24 @@ public class UndertowOptions {
     public static final Option<Long> MAX_ENTITY_SIZE = Option.simple(UndertowOptions.class, "MAX_ENTITY_SIZE", Long.class);
 
     /**
-     * The default maximum size of the HTTP entity body when using the multitipart parser. Generally this will be larger than {@link #MAX_ENTITY_SIZE}.
-     *
-     * If this is not specified it will be the same as {@link #MAX_ENTITY_SIZE}.
+     * Configures the maximum allowed size of the HTTP entity body for multipart requests.
+     * Generally, this should be set larger than {@link #MAX_ENTITY_SIZE}.
+     * <p>
+     * If a limit is already set on the current {@code HttpServerExchange}, that value will override this option.
+     * <p>
+     * If not specified, this defaults to {@link #DEFAULT_MULTIPART_MAX_ENTITY_SIZE}.
      */
     public static final Option<Long> MULTIPART_MAX_ENTITY_SIZE = Option.simple(UndertowOptions.class, "MULTIPART_MAX_ENTITY_SIZE", Long.class);
 
     /**
-     * We do not have a default upload limit
+     * Default maximum upload size 2MB
      */
-    public static final long DEFAULT_MAX_ENTITY_SIZE = -1;
+    public static final long DEFAULT_MAX_ENTITY_SIZE = 2097152;
+
+    /**
+     * Default maximum multipart upload size 2MB
+     */
+    public static final long DEFAULT_MULTIPART_MAX_ENTITY_SIZE = 2097152;
 
     /**
      * If we should buffer pipelined requests. Defaults to false.
@@ -342,10 +350,15 @@ public class UndertowOptions {
      */
     public static final Option<Integer> MAX_CACHED_HEADER_SIZE = Option.simple(UndertowOptions.class, "MAX_CACHED_HEADER_SIZE", Integer.class);
 
+    /**
+     * Default value of {@link #HTTP_HEADERS_CACHE_SIZE} option.
+     */
     public static final int DEFAULT_HTTP_HEADERS_CACHE_SIZE = 15;
 
     /**
-     * The maximum number of headers that are cached per connection. Defaults to 15. If this is set to zero the cache is disabled.
+     * The maximum number of headers that are cached per connection. If this is set to zero the cache is disabled.
+     * <p>
+     * Defaults to {@link #DEFAULT_HTTP_HEADERS_CACHE_SIZE}
      */
     public static final Option<Integer> HTTP_HEADERS_CACHE_SIZE = Option.simple(UndertowOptions.class, "HTTP_HEADERS_CACHE_SIZE", Integer.class);
 
