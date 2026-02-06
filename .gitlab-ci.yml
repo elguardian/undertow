@@ -41,6 +41,7 @@ build-job-jdk11:
 .unit-test-job-base: #Base stuff so we dont have to repeat...
   stage: test    # It only starts when the job in the build stage completes successfully.
   image: $IMAGE
+  timeout: 2h
   tags:
     - itup-alm-x86
   script: |
@@ -63,7 +64,7 @@ build-job-jdk11:
     #This ^ is required to detect build failre. -fae skip modules that depend on failing module, -fn does not fail at all.
     #We want full build to report all failures, caveat is that enignieer will have to maual go through log to pinpoint those
     #Given above we need to manually detect failure. If by any chance job should fail, this needs a tweak.
-    #IMPORTANT: this has to be multilne, seems like gitlab reactor treats each single line as separate bash run 
+    #IMPORTANT: this has to be multilne, seems like gitlab reactor treats each single line as separate bash run
   artifacts:
     reports:
       junit:
