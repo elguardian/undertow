@@ -231,8 +231,10 @@ public class PathResourceManager implements ResourceManager  {
                 SymlinkResult symlinkBase = getSymlinkBase(base, file);
                 if (!followAll && symlinkBase != null && symlinkBase.requiresCheck) {
                     if (this.followLinks && isSymlinkSafe(file)) {
+                        log.tracef("Symlink access granted for path: %s", p);
                         return getFileResource(file, path, symlinkBase.path, normalizedFile);
                     } else {
+                        log.tracef("Symlink access denied for path: %s", p);
                         log.tracef("Failed to get path resource %s from path resource manager with base %s, as it was not a safe symlink path", p, base);
                         return null;
                     }
@@ -355,33 +357,56 @@ public class PathResourceManager implements ResourceManager  {
      */
     private boolean isSymlinkSafe(final Path file) throws IOException {
         String canonicalPath = file.toRealPath().toString();
+        String separator = fileSystem.getSeparator();
+
+        log.tracef("Symlink safety check: file=%s, canonical=%s, safePaths=%s", file, canonicalPath, this.safePaths);
+
         for (String safePath : this.safePaths) {
             if (safePath.length() > 0) {
-                if (safePath.startsWith(fileSystem.getSeparator())) {
+                if (safePath.startsWith(separator)) {
                     /*
                      * Absolute path
                      */
-                    if (safePath.length() > 0 &&
-                            canonicalPath.length() >= safePath.length() &&
-                            canonicalPath.startsWith(safePath)) {
+                    // Check for exact match first
+                    if (canonicalPath.equals(safePath)) {
+                        log.tracef("Symlink allowed: canonical='%s' exactly matches safePath='%s'", canonicalPath, safePath);
+                        return true;
+                    }
+
+                    // Ensure safePath is a proper parent directory by checking for separator
+                    String safePathWithSeparator = safePath.endsWith(separator) ? safePath : safePath + separator;
+
+                    if (canonicalPath.startsWith(safePathWithSeparator)) {
+                        log.tracef("Symlink allowed: canonical='%s' is under safePath='%s'", canonicalPath, safePath);
                         return true;
                     }
                 } else {
                     /*
                      * In relative path we build the path appending to base
                      */
-                    String absSafePath = base + fileSystem.getSeparator() + safePath;
+                    String absSafePath = base + separator + safePath;
                     Path absSafePathFile = fileSystem.getPath(absSafePath);
                     String canonicalSafePath = absSafePathFile.toRealPath().toString();
-                    if (canonicalSafePath.length() > 0 &&
-                            canonicalPath.length() >= canonicalSafePath.length() &&
-                            canonicalPath.startsWith(canonicalSafePath)) {
+
+                    // Check for exact match first
+                    if (canonicalPath.equals(canonicalSafePath)) {
+                        log.tracef("Symlink allowed: canonical='%s' exactly matches canonicalSafePath='%s'", canonicalPath, canonicalSafePath);
+                        return true;
+                    }
+
+                    // Ensure canonicalSafePath is a proper parent directory by checking for separator
+                    String canonicalSafePathWithSeparator = canonicalSafePath.endsWith(separator) ?
+                        canonicalSafePath : canonicalSafePath + separator;
+
+                    if (canonicalPath.startsWith(canonicalSafePathWithSeparator)) {
+                        log.tracef("Symlink allowed: canonical='%s' is under canonicalSafePath='%s'", canonicalPath, canonicalSafePath);
                         return true;
                     }
 
                 }
             }
         }
+        log.tracef("Symlink denied: canonical='%s' does not match any safePath", canonicalPath);
         return false;
     }
 
