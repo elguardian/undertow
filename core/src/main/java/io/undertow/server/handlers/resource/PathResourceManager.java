@@ -368,7 +368,7 @@ public class PathResourceManager implements ResourceManager  {
                      * Absolute path
                      */
                     // Check for exact match first
-                    if (canonicalPath.equals(safePath)) {
+                    if (canonicalPath.length() == safePath.length() && canonicalPath.equals(safePath)) {
                         log.tracef("Symlink allowed: canonical='%s' exactly matches safePath='%s'", canonicalPath, safePath);
                         return true;
                     }
@@ -376,7 +376,7 @@ public class PathResourceManager implements ResourceManager  {
                     // Ensure safePath is a proper parent directory by checking for separator
                     String safePathWithSeparator = safePath.endsWith(separator) ? safePath : safePath + separator;
 
-                    if (canonicalPath.startsWith(safePathWithSeparator)) {
+                    if (canonicalPath.length() >= safePathWithSeparator.length() && canonicalPath.startsWith(safePathWithSeparator)) {
                         log.tracef("Symlink allowed: canonical='%s' is under safePath='%s'", canonicalPath, safePath);
                         return true;
                     }
@@ -389,7 +389,7 @@ public class PathResourceManager implements ResourceManager  {
                     String canonicalSafePath = absSafePathFile.toRealPath().toString();
 
                     // Check for exact match first
-                    if (canonicalPath.equals(canonicalSafePath)) {
+                    if (canonicalPath.length() == canonicalSafePath.length() && canonicalPath.equals(canonicalSafePath)) {
                         log.tracef("Symlink allowed: canonical='%s' exactly matches canonicalSafePath='%s'", canonicalPath, canonicalSafePath);
                         return true;
                     }
@@ -398,7 +398,7 @@ public class PathResourceManager implements ResourceManager  {
                     String canonicalSafePathWithSeparator = canonicalSafePath.endsWith(separator) ?
                         canonicalSafePath : canonicalSafePath + separator;
 
-                    if (canonicalPath.startsWith(canonicalSafePathWithSeparator)) {
+                    if (canonicalPath.length() >= canonicalSafePathWithSeparator.length() && canonicalPath.startsWith(canonicalSafePathWithSeparator)) {
                         log.tracef("Symlink allowed: canonical='%s' is under canonicalSafePath='%s'", canonicalPath, canonicalSafePath);
                         return true;
                     }
